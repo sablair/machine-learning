@@ -27,8 +27,8 @@ m = size(X, 1);
          
 % You need to return the following variables correctly 
 J = 0;
-Theta1_grad = zeros(size(Theta1));
-Theta2_grad = zeros(size(Theta2));
+Theta1Grad = zeros(size(Theta1));
+Theta2Grad = zeros(size(Theta2));
 
 % ====================== YOUR CODE HERE ======================
 % Instructions: You should complete the code by working through the
@@ -62,30 +62,48 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+a1 = [ones(m, 1), X]; % 5000 x 401
+z2 = a1 * Theta1';
+a2 = [ones(m, 1), sigmoid(z2)];
+z3 = a2 * Theta2';
+hypothesisTheta = sigmoid(z3);
+
+for k = 1:num_labels
+    yk = y == k; % all elements in matrix y that are of value k
+    hthetak = hypothesisTheta(:, k);
+    JForK = 1 / m * sum(-yk .* log(hthetak) - (1 - yk) .* log(1 - hthetak));
+    J = J + JForK;
+end
+
+regularize = lambda / (2 * m) * (sum(sum(Theta1(:, 2:end) .^ 2)) ...
+    + sum(sum(Theta2(:, 2:end) .^ 2)));
+J = J + regularize;
+
+for t = 1:m
+    for k = 1:num_labels
+        yk = y(t) == k;
+        delta3(k) = hypothesisTheta(t, k) - yk;
+    end
+    delta2 = Theta2' * delta3' .* sigmoidGradient([1, z2(t, :)])';
+    delta2 = delta2(2:end);
+
+    Theta1Grad = Theta1Grad + delta2 * a1(t, :);
+    Theta2Grad = Theta2Grad + delta3' * a2(t, :);
+end
+
+Theta1Grad = Theta1Grad / m;
+Theta2Grad = Theta2Grad / m;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Theta1Grad(:, 2:end) = Theta1Grad(:, 2:end) + lambda / m * Theta1(:, 2:end);
+Theta2Grad(:, 2:end) = Theta2Grad(:, 2:end) + lambda / m * Theta2(:, 2:end);
 
 % -------------------------------------------------------------
 
 % =========================================================================
 
 % Unroll gradients
-grad = [Theta1_grad(:) ; Theta2_grad(:)];
+grad = [Theta1Grad(:) ; Theta2Grad(:)];
 
 
 end
